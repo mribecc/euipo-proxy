@@ -110,23 +110,28 @@ async def euipo_search(payload: EuipoSearchRequest) -> Dict[str, Any]:
     data = r.json()
 
     results = []
-    for t in data.get("trademarks", []):
-        verbal = (t.get("wordMarkSpecification") or {}).get("verbalElement")
-        classes = t.get("niceClasses") or []
 
-        if payload.niceClasses:
-            if not set(classes).intersection(set(payload.niceClasses)):
-                continue
+for t in data.get("trademarks", []):
+    status = t.get("status")
+    verbal = (t.get("wordMarkSpecification") or {}).get("verbalElement")
+    classes = t.get("niceClasses") or []
 
-        results.append(
-            {
-                "applicationNumber": t.get("applicationNumber"),
-                "verbalElement": verbal,
-                "status": t.get("status"),
-                "niceClasses": classes,
-                "markFeature": t.get("markFeature"),
-                "markBasis": t.get("markBasis"),
-            }
-        )
+    # Solo marchi attivi
+    if status not in ["REGISTERED", "APPLICATION_UNDER_EXAMINATION", "OPPOSITION"]:
+        continue
+
+    # Filtro classi Nice
+    if payload.niceClasses:
+        if not set(classes).intersection(set(payload.niceClasses)):
+            continue
+
+    results.append({
+        "applicationNumber": t.get("applicationNumber"),
+        "verbalElement": verbal,
+        "status": status,
+        "niceClasses": classes,
+        "markFeature": t.get("markFeature"),
+        "markBasis": t.get("markBasis"),
+    })
 
     return {"query": payload.text, "page": payload.page, "size": payload.size, "results": results}
