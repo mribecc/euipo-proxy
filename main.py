@@ -51,19 +51,13 @@ async def _get_access_token() -> str:
     if _token_cache["token"] and now < (_token_cache["exp"] - 30):
         return _token_cache["token"]
 
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": EUIPO_CLIENT_ID,
-        "client_secret": EUIPO_CLIENT_SECRET,
-        "scope": "uid",
-    }
-
     async with httpx.AsyncClient(timeout=30) as client:
-        r = await client.post(
-            AUTH_URL,
-            data=data,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
+    r = await client.post(
+        AUTH_URL,
+        data={"grant_type": "client_credentials"},
+        auth=(EUIPO_CLIENT_ID, EUIPO_CLIENT_SECRET),
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
 
     logger.info("Token response status=%s body=%s", r.status_code, r.text[:300])
 
