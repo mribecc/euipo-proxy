@@ -19,7 +19,7 @@ EUIPO_CLIENT_ID = os.getenv("EUIPO_CLIENT_ID", "").strip()
 EUIPO_CLIENT_SECRET = os.getenv("EUIPO_CLIENT_SECRET", "").strip()
 
 # IMPORTANT: OAuth2 token endpoint (client_credentials)
-AUTH_URL = "https://auth-sandbox.euipo.europa.eu/oauth2/token"
+AUTH_URL = "https://auth-sandbox.euipo.europa.eu/oidc/accessToken"
 API_BASE = "https://api-sandbox.euipo.europa.eu"
 
 app = FastAPI(title="EUIPO Proxy", version="1.0.0")
@@ -54,8 +54,12 @@ async def _get_access_token() -> str:
     async with httpx.AsyncClient(timeout=30) as client:
     r = await client.post(
         AUTH_URL,
-        data={"grant_type": "client_credentials"},
-        auth=(EUIPO_CLIENT_ID, EUIPO_CLIENT_SECRET),
+        data={
+            "grant_type": "client_credentials",
+            "client_id": EUIPO_CLIENT_ID,
+            "client_secret": EUIPO_CLIENT_SECRET,
+            "scope": "uid",
+        },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
